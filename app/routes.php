@@ -8,6 +8,7 @@ Route::pattern('hash', '[a-z0-9]+');
 Route::pattern('hex', '[a-f0-9]+');
 Route::pattern('uuid', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
 Route::pattern('string', '[a-zA-Z0-9]+');
+Route::pattern('username', '^\b[a-z\pN\-\_\.]+\b$');
 Route::pattern('slug', '[a-z0-9-]+');
 
 // CSRF Filter on all POST routes
@@ -32,19 +33,52 @@ Route::get('help/rules', [
 ]);
 Route::get('help/{page}',                      ['uses' => 'PagesController@page',               'as' => 'page']);
 
-// ===== Авторизация =====
+// Auth
+Route::get('registration', [
+	'as' => 'auth.registration',
+	'uses' => 'AuthController@registration'
+]);
 
-Route::get( 'registration',                     ['uses' => 'AuthController@getRegistration',    'as' => 'auth.registration']);
-Route::post('registration',                     ['uses' => 'AuthController@postRegistration',   'as' => 'auth.registration.post']);
+Route::post('registration', [
+	'as' => 'auth.registration.post',
+	'uses' => 'AuthController@submitRegistration'
+]);
 
-Route::get('registration/almost_done',          ['uses' => 'AuthController@getPreconfirmation', 'as' => 'auth.registration.preconfirmation']);
-Route::get('registration/confirmation/{string}',['uses' => 'AuthController@getConfirmation',    'as' => 'auth.registration.confirmation']);
+Route::get('registration/almost-done', [
+	'as' => 'auth.registration.pre-confirmation',
+	'uses' => 'AuthController@preConfirmation'
+]);
 
-Route::get( 'login',                            ['uses' => 'AuthController@getLogin',           'as' => 'auth.login']);
-Route::post('login',                            ['uses' => 'AuthController@postLogin',          'as' => 'auth.login.post']);
+Route::get('registration/confirmation/{string}', [
+	'as' => 'auth.registration.confirmation',
+	'uses' => 'AuthController@checkConfirmation'
+]);
 
-Route::get( 'logout',                           ['uses' => 'AuthController@getLogout',          'as' => 'auth.logout']);
+Route::get('login', [
+	'as' => 'auth.login',
+	'uses' => 'AuthController@login'
+]);
 
+Route::post('login', [
+	'as' => 'auth.login.post',
+	'uses' => 'AuthController@submitLogin'
+]);
+
+Route::get('logout', [
+	'as' => 'auth.logout',
+	'uses' => 'AuthController@logout'
+]);
+
+// Docs
+Route::get('docs/status', [
+	'as' => 'documentation.status',
+	'uses' => 'DocsController@status'
+]);
+
+Route::get('docs/{version?}/{string?}', [
+	'as' => 'documentation',
+	'uses' => 'DocsController@docs'
+]);
 
 // ===== Админка =====
 
@@ -57,20 +91,17 @@ Route::group(['before' => 'administrator'], function ()
 
 });
 
-// ===== Документация
-Route::get( 'docs/status',                      ['uses' => 'DocsController@status',             'as' => 'documentation.status']);
-Route::get( 'docs/{version?}/{string?}',        ['uses' => 'DocsController@docs',               'as' => 'documentation']);
-
 // ===== Профайл пользователя
 
-Route::get( 'user/{string}',                    ['uses' => 'UserController@profile',            'as' => 'user.profile']);
-Route::get( 'user/{string}/articles',           ['uses' => 'UserController@articles',           'as' => 'user.articles']);
-Route::get( 'user/{string}/tips',               ['uses' => 'UserController@tips',               'as' => 'user.tips']);
+Route::get( '@{username}',                    ['uses' => 'UserController@profile',            'as' => 'user.profile']);
+Route::get( '@{username}/articles',           ['uses' => 'UserController@articles',           'as' => 'user.articles']);
+Route::get( '@{username}/tips',               ['uses' => 'UserController@tips',               'as' => 'user.tips']);
 
 Route::group(['before' => 'auth'], function ()
 {
 	// Внутренний профайл пользователя (настройки, смена пароля и т.п.)
-	Route::get( 'settings',                     ['uses' => 'UserController@edit',               'as' => 'user.edit']);
+	Route::get(  'settings',                     ['uses' => 'UserController@edit',               'as' => 'user.edit']);
+	Route::post( 'settings',                     ['uses' => 'UserController@update']);
 });
 
 
@@ -86,18 +117,19 @@ Route::group(['before' => 'logged'], function ()
 });
 
 
-// ===== Посты =====
-
-// Лента последних постов
-Route::get( 'feed',                             ['uses' => 'PostController@feed',               'as' => 'feed']);
+// Articles
+Route::get('articles', [
+	'as' => 'articles.all',
+	'uses' => 'ArticlesController@showAll'
+]);
 // Отдельный пост
-Route::get( 'content/{slug}',                   ['uses' => 'PostController@show',               'as' => 'post.view']);
+Route::get( 'content/{slug}',                   ['uses' => 'ArticleController@show',               'as' => 'post.view']);
 
 Route::group(['before' => 'auth'], function ()
 {
-		Route::get( 'content/{slug}/edit/',     ['uses' => 'PostController@edit',               'as' => 'post.edit']);
-		Route::get( 'posts/create',             ['uses' => 'PostController@create',             'as' => 'post.create']);
-		Route::post('posts/store',              ['uses' => 'PostController@store',              'as' => 'post.store']);
+		Route::get( 'content/{id}/edit/',       ['uses' => 'ArticleController@edit',               'as' => 'post.edit']);
+		Route::get( 'posts/create',             ['uses' => 'ArticleController@create',             'as' => 'post.create']);
+		Route::post('posts/store',              ['uses' => 'ArticleController@store',              'as' => 'post.store']);
 	});
 
 

@@ -1,52 +1,69 @@
-@extends('layouts.nosidebar')
+@extends('layouts.profile')
 
-@section('title')
-    Пользователь
-@stop
+@section('title', $user->username)
+@section('meta-description', 'Описание')
 
-@section('content')
+@section('contents')
+	<section class="bg-white p-35 p-b-25 m-b-30 border-rounded">
+		@if($user->info->birthday)
+			<p class="m-b-5"><strong>День рождения</strong></p>
+			<p class="small" title="О себе">{{ $user->present()->birthday() }}</p>
+		@endif
+		@if($user->info->about)
+			<p class="m-b-5"><strong>Обо мне</strong></p>
+			<p class="small" title="О себе">{{ $user->info->about }}</p>
+		@endif
+		@if($user->info->about || $user->info->birthday)
+			<hr>
+		@endif
+		<aside class="row">
+			<section class="col-xs-3">
+				<p class="text-center big"><strong>{{ $user->articles()->count() }}</strong></p>
+				<p class="tiny text-center text-uppercase last">Статей</p>
+			</section>
+			<section class="col-xs-3">
+				<p class="text-center big"><strong>{{ $user->comments()->count() }}</strong></p>
+				<p class="tiny text-center text-uppercase last">Комментариев</p>
+			</section>
+		</aside>
+	</section>
 
-<div class="row">
-    <div class="col-md-4">
-        <h3>{{ $user->username }}</h3>
-        <p>
-            <br><br>Аватар<br><br>
-        </p>
-        @if( $user->isAdmin() ) <span class="text-danger">Администратор</span>  @endif
-        @if( $user->isModerator() ) <span class="text-danger">Модератор</span>  @endif
-        <p>Зарегистрировался:</p>
-        <p>Последняя активность:</p>
-        <p>Статей: 3</p>
-        <p>Комментариев: 354</p>
-        <p>Новостей предложено: 120</p>
-    </div>
-    <div class="col-md-8">
-        <div class="row">
-            <div class="col-md-12">
-                <p>О себе:</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <p>Вконтакт:</p>
-                <p>Твиттер:</p>
-                <p>Фейсбук:</p>
-                <p>Гитхаб:</p>
-                <p>Битбакет:</p>
-                <p>Google Plus:</p>
-            </div>
-            <div class="col-md-6">
-
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<ul class="nav nav-tabs">
-    <li class="active">Статьи</li>
-    <li>Черновики</li>
-    <li>Черновики</li>
-</ul>
-
+	<section>
+		<ul class="tabs">
+			<li class="active" data-tab="articles">
+				<p>Статьи</p>
+			</li>
+			<li data-tab="news">
+				<p>Новости</p>
+			</li>
+			<li data-tab="drafts">
+				<p>Черновики</p>
+			</li>
+		</ul>
+		<ul class="tab-contents">
+			<li class="visible" data-tab="articles">
+				<section>
+					@if(count($user->articles))
+						<ul class="unstyled">
+							@foreach($user->articles as $article)
+								<li>{{ 1 }}</li>
+							@endforeach
+						</ul>
+					@else
+						<p>Пользователь пока не написал ни одной статьи</p>
+					@endif
+				</section>
+			</li>
+			<li data-tab="news">
+				<section>
+					<p>123</p>
+				</section>
+			</li>
+			<li data-tab="drafts">
+				<section>
+					<p>dr</p>
+				</section>
+			</li>
+		</ul>
+	</section>
 @stop

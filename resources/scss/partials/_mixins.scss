@@ -18,3 +18,18 @@
 		margin-right: 8px;
 	}
 }
+
+%clearfix {
+	&:before, &:after {
+		content: " ";
+		display: table;
+	}
+
+	&:after {
+		clear: both;
+	}
+}
+
+%border-radius {
+	border-radius: 4px;
+}

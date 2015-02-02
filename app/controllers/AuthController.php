@@ -4,6 +4,8 @@ use LaravelRU\User\Forms\LoginForm;
 use LaravelRU\User\Forms\RegistrationForm;
 use LaravelRU\User\Models\Confirmation;
 use LaravelRU\User\Models\User;
+use LaravelRU\User\Models\UserInfo;
+use LaravelRU\User\Models\UserSocialNetwork;
 
 class AuthController extends BaseController {
 
@@ -23,7 +25,7 @@ class AuthController extends BaseController {
 		$this->loginForm = $loginForm;
 	}
 
-	public function getRegistration()
+	public function registration()
 	{
 		$jsToken = Str::quickRandom(10);
 		Session::set('jsToken', $jsToken);
@@ -31,15 +33,17 @@ class AuthController extends BaseController {
 		return View::make('auth.registration', compact('jsToken'));
 	}
 
-	public function postRegistration()
+	public function submitRegistration()
 	{
-		$input = Input::only('username', 'email', 'password', 'jtoken');
+		$input = Input::only('username', 'email', 'password', 'jsToken');
 
 		$this->registrationForm->validate($input);
 
-		unset($input['jtoken']);
+		unset($input['jsToken']);
 
 		$user = User::create($input);
+		$user->info()->save(new UserInfo);
+		$user->social()->save(new UserSocialNetwork);
 
 		$confirmationString = Str::quickRandom(20);
 
@@ -57,15 +61,15 @@ class AuthController extends BaseController {
 			$message->subject('Подтверждение регистрации');
 		});
 
-		return Redirect::route('auth.registration.preconfirmation');
+		return Redirect::route('auth.registration.pre-confirmation');
 	}
 
-	public function getPreconfirmation()
+	public function preConfirmation()
 	{
-		return View::make('auth/preconfirmation');
+		return View::make('auth.pre-confirmation');
 	}
 
-	public function getConfirmation($code)
+	public function checkConfirmation($code)
 	{
 		$userConfirmation = Confirmation::where('code', $code)->first();
 
@@ -78,18 +82,18 @@ class AuthController extends BaseController {
 
 			Auth::login($user);
 
-			return View::make('auth/confirmation_success');
+			return View::make('auth.confirmation-success');
 		}
 
-		return View::make('auth/confirmation_error');
+		return View::make('auth.confirmation-error');
 	}
 
-	public function getLogin()
+	public function login()
 	{
-		return View::make('auth/login');
+		return View::make('auth.login');
 	}
 
-	public function postLogin()
+	public function submitLogin()
 	{
 		$login = Input::get('login');
 		$password = Input::get('password');
@@ -109,18 +113,18 @@ class AuthController extends BaseController {
 		if ( ! $success)
 		{
 			return Redirect::route('auth.login')
-				->withErrors(['wrong_input' => 'Неправильный email/логин или пароль.'])
+				->withErrors(['wrong_input' => 'Неправильный логин, email или пароль.'])
 				->onlyInput('login');
 		}
 
 		return Redirect::intended();
 	}
 
-	public function getLogout()
+	public function logout()
 	{
 		Auth::logout();
 
-		return Redirect::to('/');
+		return Redirect::route('home');
 	}
 
 }
